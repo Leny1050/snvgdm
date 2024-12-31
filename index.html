@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>С Новым Годом!</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      color: #fff;
+      text-align: center;
+      min-height: 100vh;
+      position: relative;
+      overflow: hidden;
+      /* Плавная анимация цветного фона */
+      background: linear-gradient(135deg, #2e0051, #45006e, #5700a3, #2e0051);
+      background-size: 600% 600%;
+      animation: bgAnimation 20s ease infinite;
+    }
+    @keyframes bgAnimation {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* Звёзды */
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: twinkle 2s infinite alternate ease-in-out;
+    }
+    @keyframes twinkle {
+      0%   { transform: scale(0.5); opacity: 0.3; }
+      100% { transform: scale(1.3); opacity: 1;   }
+    }
+    .star:nth-of-type(1)  { top: 10%; left: 15%; width: 3px; height: 3px;   animation-delay: 0s;   }
+    .star:nth-of-type(2)  { top: 30%; left: 80%; width: 2px; height: 2px;   animation-delay: 0.3s; }
+    .star:nth-of-type(3)  { top: 20%; left: 50%; width: 4px; height: 4px;   animation-delay: 0.6s; }
+    .star:nth-of-type(4)  { top: 75%; left: 30%; width: 3px; height: 3px;   animation-delay: 0.9s; }
+    .star:nth-of-type(5)  { top: 60%; left: 60%; width: 2px; height: 2px;   animation-delay: 1.2s; }
+    .star:nth-of-type(6)  { top: 45%; left: 90%; width: 4px; height: 4px;   animation-delay: 1.5s; }
+    .star:nth-of-type(7)  { top: 85%; left: 20%; width: 2px; height: 2px;   animation-delay: 0.8s; }
+    .star:nth-of-type(8)  { top: 35%; left: 15%; width: 2px; height: 2px;   animation-delay: 1.2s; }
+    .star:nth-of-type(9)  { top: 10%; left: 65%; width: 3px; height: 3px;   animation-delay: 0.4s; }
+    .star:nth-of-type(10) { top: 70%; left: 75%; width: 4px; height: 4px;   animation-delay: 0.7s; }
+    /* Мягкое свечение */
+    .glow {
+      position: absolute;
+      top: 0; 
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2), transparent 70%);
+      animation: glowPulse 5s ease-in-out infinite;
+      z-index: 0;
+    }
+    @keyframes glowPulse {
+      0%   { opacity: 0.3; }
+      50%  { opacity: 0.6; }
+      100% { opacity: 0.3; }
+    }
+    /* Canvas снег */
+    #snowCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
+    /* Canvas фейерверков */
+    #fireworksCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 2;
+      pointer-events: none;
+    }
+    /* Заголовок (неоновая анимация) */
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      margin-top: 1rem;
+      text-shadow: 0 0 8px #fff, 0 0 20px #ff00c8, 0 0 30px #ff00c8;
+      animation: neonGlow 2s linear infinite alternate;
+      position: relative;
+      z-index: 100;
+    }
+    @keyframes neonGlow {
+      0% {
+        text-shadow:
+          0 0 8px #fff,
+          0 0 20px #ff00c8,
+          0 0 30px #ff00c8,
+          0 0 40px #ff00c8;
+      }
+      100% {
+        text-shadow:
+          0 0 8px #fff,
+          0 0 20px #ff00ea,
+          0 0 30px #ff00ea,
+          0 0 50px #ff00ea;
+      }
+    }
+    p {
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin: 0 auto 1rem;
+      line-height: 1.6;
+      position: relative;
+      z-index: 100;
+    }
+    .greeting-container {
+      margin-top: 4vh;
+      position: relative;
+      z-index: 100;
+    }
+    /* Обратный отсчёт */
+    .countdown {
+      font-size: 1.1rem;
+      margin: 1rem auto;
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 0 6px rgba(255,255,255,0.3);
+    }
+    /* Формочка (Имя, Желание, кнопки) */
+    .wish-form {
+      margin: 1rem auto;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .wish-form input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      border: none;
+      outline: none;
+    }
+    .wish-form button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      background-color: #ff0090;
+      color: #fff;
+      transition: 0.3s;
+    }
+    .wish-form button:hover {
+      background-color: #ff00c8;
+    }
+
+    /* «Коробка» (фон — SVG) */
+    .box-container {
+      width: 400px;
+      height: 300px;
+      margin: 2rem auto 3rem;
+      position: relative;
+      z-index: 100;
+      overflow: hidden;
+      background: url("data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMzAwIDMwMCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3QgeD0iNTAiIHk9IjUwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0MwOUM2MCIvPjxwYXRoIGZpbGw9IiNENTBGNzQiIGQ9Ik01MCA1MCBMMCA4MCBMMCAyODAgNTAgMjUwWiIvPjxwYXRoIGZpbGw9IiNENTBGNzQiIGQ9Ik0yNTAgNTBMMzAwIDgwTDMwMCAyODAgMjUwIDI1MFoiLz48cGF0aCBmaWxsPSIjRDUwRjc0IiBkPSJNNTAgNTBMODAgMEwyMjAgMEwyNTAgNTBaIi8+PHBhdGggZmlsbD0iI0Q1MEY3NCIgZD0iTTUwIDI1MEw4MCAzMDBMMjIwIDMwMCAyNTAgMjUwWiIvPjxsaW5lIHgxPSI1MCIgeTE9IjUwIiB4Mj0iMCIgeTI9IjgwIiBzdHJva2U9IiNBNjg5NTIiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIyNTAiIHkxPSI1MCIgeDI9IjMwMCIgeTI9IjgwIiBzdHJva2U9IiNBNjg5NTIiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSI1MCIgeTE9IjUwIiB4Mj0iODAiIHkyPSIwIiBzdHJva2U9IiNBNjg5NTIiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIyNTAiIHkxPSI1MCIgeDI9IjIyMCIgeTI9IjAiIHN0cm9rZT0iI0E2ODk1MiIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjUwIiB5MT0iMjUwIiB4Mj0iMCIgeTI9IjI4MCIgc3Ryb2tlPSIjQTY4OTUyIiBzdHJva2Utd2lkdGg9IjIiLz48bGluZSB4MT0iMjUwIiB5MT0iMjUwIiB4Mj0iMzAwIiB5Mj0iMjgwIiBzdHJva2U9IiNBNjg5NTIiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSI1MCIgeTE9IjI1MCIgeDI9IjgwIiB5Mj0iMzAwIiBzdHJva2U9IiNBNjg5NTIiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIyNTAiIHkxPSIyNTAiIHgyPSIyMjAiIHkyPSIzMDAiIHN0cm9rZT0iI0E2ODk1MiIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iNTAiIHk9IjUwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQTY4OTUyIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=") center no-repeat;
+      background-size: contain;
+    }
+
+    /* Игрушки (кружки) */
+    .ornament {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      cursor: pointer;
+      animation: ornamentBlink 2s infinite alternate;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @keyframes ornamentBlink {
+      0%   { transform: scale(0.9); }
+      100% { transform: scale(1.1); }
+    }
+    .ornament-text {
+      font-size: 14px;
+      color: #fff;
+      text-align: center;
+      pointer-events: none;
+    }
+    /* Цвета */
+    .ornament.color1 { background-color: #ff6b6b; }
+    .ornament.color2 { background-color: #ffa36c; }
+    .ornament.color3 { background-color: #ffd93d; }
+    .ornament.color4 { background-color: #6bff6b; }
+    .ornament.color5 { background-color: #6b90ff; }
+    .ornament.color6 { background-color: #d96bff; }
+
+    /* Модальное окно */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 300;
+      left: 0; 
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+      position: relative;
+      color: #333;
+      text-align: left;
+    }
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover, .close:focus {
+      color: #000;
+    }
+    .deleteBtn {
+      background-color: #ff0030;
+      color: #fff;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .deleteBtn:hover {
+      background-color: #ff0066;
+    }
+
+    /* Кнопка «Случайное желание» */
+    .randomBtn {
+      margin-left: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      background-color: #00c0ff;
+      color: #fff;
+      transition: 0.3s;
+    }
+    .randomBtn:hover {
+      background-color: #00e0ff;
+    }
+
+    /* Кнопка управления звуком */
+    .audio-control {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 200;
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 2px solid #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 10px 15px;
+      font-size: 1rem;
+      color: #fff;
+      transition: background-color 0.3s;
+    }
+    .audio-control:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ЗВЁЗДЫ -->
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+
+  <!-- Мягкое свечение -->
+  <div class="glow"></div>
+
+  <!-- Снег -->
+  <canvas id="snowCanvas"></canvas>
+
+  <!-- Фейерверки -->
+  <canvas id="fireworksCanvas"></canvas>
+
+  <!-- Кнопка звука -->
+  <button class="audio-control" id="audioBtn">Включить звук</button>
+  <audio id="bgAudio" loop src="sng.mp3" preload="auto"></audio>
+
+  <!-- Основное поздравление -->
+  <div class="greeting-container">
+    <h1>С Новым Годом!</h1>
+    <p>Пусть в наступающем году вас ждут волшебные события и радостные встречи!</p>
+
+    <!-- Обратный отсчёт -->
+    <div class="countdown" id="countdown"></div>
+
+    <!-- Поля ввода и кнопка «добавить» -->
+    <div class="wish-form">
+      <input type="text" id="fromInput" placeholder="Ваше имя или ник..." />
+      <input type="text" id="wishInput" placeholder="Введите ваше желание..." />
+      <button id="addWishBtn">Добавить игрушку</button>
+      <!-- Новая кнопка «Случайное желание» -->
+      <button id="randomBtn" class="randomBtn">Случайное желание</button>
+    </div>
+
+    <!-- «Коробка» для игрушек -->
+    <div class="box-container" id="boxContainer"></div>
+  </div>
+
+  <!-- Модальное окно для просмотра желания -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span id="closeModal" class="close">&times;</span>
+      <p id="modalText"></p>
+      <!-- Кнопка «Удалить» будет добавляться динамически, если это желание текущего пользователя -->
+      <div id="deleteContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    /***********************************************************
+     * ГЕНЕРАЦИЯ / ЗАПОМНАНИЕ userId (чтобы отличать свои желания)
+     ***********************************************************/
+    let userId = localStorage.getItem('userId');
+    if (!userId) {
+      // Генерируем случайный userId
+      userId = 'user_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('userId', userId);
+    }
+
+    /***********************************************************
+     * ХРАНИМ ВСЕ ЖЕЛАНИЯ В localStorage
+     * Массив «allWishes» с элементами { id, userId, from, wish, color, x, y }
+     ***********************************************************/
+    let allWishes = JSON.parse(localStorage.getItem('allWishes') || '[]');
+
+    // Обновляет localStorage
+    function saveAllWishes() {
+      localStorage.setItem('allWishes', JSON.stringify(allWishes));
+    }
+
+    /***********************************************************
+     * ВОССТАНОВИТЬ существующие игрушки при загрузке
+     ***********************************************************/
+    const boxContainer = document.getElementById('boxContainer');
+
+    function renderAllWishes() {
+      // Очищаем контейнер
+      boxContainer.innerHTML = '';
+
+      // Для каждого желания создаём .ornament
+      allWishes.forEach((item) => {
+        createOrnamentDOM(item);
+      });
+    }
+
+    // Функция: создать элемент .ornament в DOM из объекта item
+    function createOrnamentDOM(item) {
+      const ornament = document.createElement('div');
+      ornament.classList.add('ornament');
+      ornament.classList.add(`color${item.color}`);
+      ornament.style.left = item.x + 'px';
+      ornament.style.top  = item.y + 'px';
+
+      // Порядковый номер (но т.к. ID не обязательно числовой, 
+      // используем "орнамент" массив, можно показывать что угодно)
+      // Тут же можно показывать индекс или просто #, 
+      // но оставим как короткий ID, если нужно. Мы покажем 3 последних символа:
+      const shortId = item.id.slice(-3).toUpperCase();
+      const ornamentText = document.createElement('span');
+      ornamentText.classList.add('ornament-text');
+      ornamentText.textContent = shortId;
+
+      ornament.setAttribute('data-id', item.id);        // для поиска при удалении
+      ornament.setAttribute('data-userid', item.userId);
+      ornament.setAttribute('data-from', item.from);
+      ornament.setAttribute('data-wish', item.wish);
+
+      ornament.appendChild(ornamentText);
+      boxContainer.appendChild(ornament);
+
+      makeDraggable(ornament); // подключаем drag-n-drop
+    }
+
+    /***********************************************************
+     * При загрузке страницы — отрендерить все сохранённые
+     ***********************************************************/
+    renderAllWishes();
+
+    /***********************************************************
+     * ДОБАВЛЕНИЕ новой игрушки
+     ***********************************************************/
+    const fromInput = document.getElementById('fromInput');
+    const wishInput = document.getElementById('wishInput');
+    const addWishBtn = document.getElementById('addWishBtn');
+
+    addWishBtn.addEventListener('click', () => {
+      const fromValue = fromInput.value.trim() || '(аноним)';
+      const wishValue = wishInput.value.trim();
+      if (!wishValue) return;
+
+      // Создаём новый объект желания
+      const newId = 'wish_' + Math.random().toString(36).substr(2, 9);
+      const colorIndex = Math.floor(Math.random() * 6) + 1;
+
+      // Координаты
+      const boxRect = boxContainer.getBoundingClientRect();
+      const x = Math.random() * (boxRect.width - 40);
+      const y = Math.random() * (boxRect.height - 40);
+
+      const newWish = {
+        id: newId,
+        userId: userId,    // текущий пользователь
+        from: fromValue,
+        wish: wishValue,
+        color: colorIndex,
+        x,
+        y
+      };
+
+      // Добавляем в массив и сохраняем
+      allWishes.push(newWish);
+      saveAllWishes();
+
+      // Рендерим новую игрушку
+      createOrnamentDOM(newWish);
+
+      // Очищаем поля
+      fromInput.value = '';
+      wishInput.value = '';
+    });
+
+    /***********************************************************
+     * МОДАЛЬНОЕ ОКНО: показ желания при клике
+     * + Удаление (если userId совпадает)
+     ***********************************************************/
+    const modal = document.getElementById('modal');
+    const modalText = document.getElementById('modalText');
+    const closeModal = document.getElementById('closeModal');
+    const deleteContainer = document.getElementById('deleteContainer');
+
+    boxContainer.addEventListener('click', (e) => {
+      if (e.target.classList.contains('ornament')) {
+        const id    = e.target.getAttribute('data-id');
+        const oUser = e.target.getAttribute('data-userid');
+        const oFrom = e.target.getAttribute('data-from');
+        const oWish = e.target.getAttribute('data-wish');
+
+        // Показываем в модалке
+        modalText.innerHTML = "<strong>От кого:</strong> " + oFrom
+                            + "<br /><strong>Желание:</strong> " + oWish;
+        
+        // Если это желание принадлежит текущему userId — показываем кнопку «Удалить»
+        deleteContainer.innerHTML = '';
+        if (oUser === userId) {
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'Удалить';
+          delBtn.classList.add('deleteBtn');
+
+          delBtn.addEventListener('click', () => {
+            // Удаляем из allWishes
+            allWishes = allWishes.filter(item => item.id !== id);
+            saveAllWishes();
+            // Перерисовать
+            renderAllWishes();
+            // Закрыть модалку
+            modal.style.display = 'none';
+          });
+
+          deleteContainer.appendChild(delBtn);
+        }
+
+        modal.style.display = 'block';
+      }
+    });
+
+    closeModal.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    /***********************************************************
+     * Кнопка «Случайное желание»
+     ***********************************************************/
+    const randomBtn = document.getElementById('randomBtn');
+    randomBtn.addEventListener('click', () => {
+      if (allWishes.length === 0) {
+        alert('Пока нет ни одного желания!');
+        return;
+      }
+      // Берём случайный элемент
+      const randomIndex = Math.floor(Math.random() * allWishes.length);
+      const randWish = allWishes[randomIndex];
+
+      // Показываем в модалке
+      modalText.innerHTML = "<strong>От кого:</strong> " + randWish.from
+                          + "<br /><strong>Желание:</strong> " + randWish.wish;
+      deleteContainer.innerHTML = '';
+      // Если это желание текущего юзера, добавим кнопку «Удалить»
+      if (randWish.userId === userId) {
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Удалить';
+        delBtn.classList.add('deleteBtn');
+        delBtn.addEventListener('click', () => {
+          allWishes = allWishes.filter(item => item.id !== randWish.id);
+          saveAllWishes();
+          renderAllWishes();
+          modal.style.display = 'none';
+        });
+        deleteContainer.appendChild(delBtn);
+      }
+
+      modal.style.display = 'block';
+    });
+
+    /***********************************************************
+     * DRAG-N-DROP для .ornament
+     * При перемещении нужно обновлять x,y в allWishes → localStorage
+     ***********************************************************/
+    function makeDraggable(el) {
+      let isDragging = false;
+      let offsetX = 0, offsetY = 0;
+
+      el.addEventListener('mousedown', startDrag);
+      el.addEventListener('touchstart', startDrag, {passive: false});
+
+      function startDrag(e) {
+        e.preventDefault();
+        isDragging = true;
+        const { clientX, clientY } = getClientPos(e);
+        offsetX = clientX - el.offsetLeft;
+        offsetY = clientY - el.offsetTop;
+
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('touchmove', onDrag, {passive: false});
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+      }
+
+      function onDrag(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        const { clientX, clientY } = getClientPos(e);
+        const newLeft = clientX - offsetX;
+        const newTop  = clientY - offsetY;
+
+        // Двигаем элемент
+        el.style.left = newLeft + 'px';
+        el.style.top  = newTop  + 'px';
+      }
+
+      function endDrag() {
+        isDragging = false;
+        document.removeEventListener('mousemove', onDrag);
+        document.removeEventListener('touchmove', onDrag);
+        document.removeEventListener('mouseup', endDrag);
+        document.removeEventListener('touchend', endDrag);
+
+        // Запомним новые координаты в allWishes
+        const ornamentId = el.getAttribute('data-id');
+        const index = allWishes.findIndex(item => item.id === ornamentId);
+        if (index !== -1) {
+          allWishes[index].x = parseFloat(el.style.left);
+          allWishes[index].y = parseFloat(el.style.top);
+          saveAllWishes();
+        }
+      }
+
+      function getClientPos(e) {
+        if (e.touches && e.touches.length > 0) {
+          return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+        } else {
+          return { clientX: e.clientX, clientY: e.clientY };
+        }
+      }
+    }
+
+    /***********************************************************
+     * ОБРАТНЫЙ ОТСЧЁТ ДО НОВОГО ГОДА
+     ***********************************************************/
+    const countdownEl = document.getElementById('countdown');
+    const newYearDate = new Date("Jan 1, 2025 00:00:00").getTime();
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = newYearDate - now;
+      if (distance < 0) {
+        countdownEl.textContent = "С Новым Годом!";
+        return;
+      }
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      countdownEl.textContent =
+        `До Нового Года: ${days} д. ${hours} ч. ${minutes} м. ${seconds} с.`;
+    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    /***********************************************************
+     * АНИМАЦИЯ СНЕГА
+     ***********************************************************/
+    const snowCanvas = document.getElementById("snowCanvas");
+    const snowCtx = snowCanvas.getContext("2d");
+
+    let flakes = [];
+    let canvasWidth, canvasHeight;
+
+    function setSnowCanvasSize() {
+      snowCanvas.width = window.innerWidth;
+      snowCanvas.height = window.innerHeight;
+      canvasWidth = snowCanvas.width;
+      canvasHeight = snowCanvas.height;
+    }
+
+    window.addEventListener("resize", () => {
+      setSnowCanvasSize();
+    });
+    setSnowCanvasSize();
+
+    class Snowflake {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvasWidth;
+        this.y = Math.random() * -canvasHeight;
+        this.radius = Math.random() * 2 + 1;
+        this.speedY = Math.random() * 1 + 0.5;
+        this.speedX = (Math.random() - 0.5) * 0.5;
+        this.alpha = Math.random() * 0.5 + 0.3;
+      }
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX;
+        if (this.y > canvasHeight) {
+          this.reset();
+          this.y = 0;
+        }
+      }
+      draw() {
+        snowCtx.beginPath();
+        snowCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        snowCtx.fillStyle = "rgba(255, 255, 255, " + this.alpha + ")";
+        snowCtx.fill();
+      }
+    }
+    for (let i = 0; i < 150; i++) {
+      flakes.push(new Snowflake());
+    }
+    function animateSnow() {
+      snowCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+      for (let flake of flakes) {
+        flake.update();
+        flake.draw();
+      }
+      requestAnimationFrame(animateSnow);
+    }
+    animateSnow();
+
+    /***********************************************************
+     * ФЕЙЕРВЕРКИ
+     ***********************************************************/
+    const fireworksCanvas = document.getElementById("fireworksCanvas");
+    const fCtx = fireworksCanvas.getContext("2d");
+    fireworksCanvas.width = window.innerWidth;
+    fireworksCanvas.height = window.innerHeight;
+
+    window.addEventListener("resize", () => {
+      fireworksCanvas.width = window.innerWidth;
+      fireworksCanvas.height = window.innerHeight;
+    });
+
+    class FireworkParticle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.radius = Math.random() * 2 + 2;
+        this.speedX = Math.random() * 5 - 2.5;
+        this.speedY = Math.random() * 5 - 2.5;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.01 + 0.007; 
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.alpha -= this.decay;
+      }
+      draw() {
+        fCtx.save();
+        fCtx.globalAlpha = this.alpha;
+        fCtx.beginPath();
+        fCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        fCtx.fillStyle = this.color;
+        fCtx.fill();
+        fCtx.restore();
+      }
+    }
+
+    let fireworks = [];
+    setInterval(() => {
+      const x = Math.random() * fireworksCanvas.width;
+      const y = Math.random() * fireworksCanvas.height * 0.5;
+      const color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+      for (let i = 0; i < 30; i++) {
+        fireworks.push(new FireworkParticle(x, y, color));
+      }
+    }, 2000);
+
+    function animateFireworks() {
+      fCtx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+      fireworks = fireworks.filter(p => p.alpha > 0);
+      fireworks.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animateFireworks);
+    }
+    animateFireworks();
+  </script>
+</body>
+</html>
