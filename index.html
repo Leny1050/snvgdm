@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>С Новым Годом!</title>
   <style>
+    /* Ваши стили остаются без изменений */
     * {
       margin: 0;
       padding: 0;
@@ -288,62 +289,30 @@
       background-color: rgba(255, 255, 255, 0.3);
     }
   </style>
-</head>
-<body>
+  
+  <!-- Firebase SDK (модульный подход) -->
+  <script type="module">
+    // Импорт необходимых функций из Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, getDocs, query, orderBy, serverTimestamp, doc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
 
-  <!-- ЗВЁЗДЫ -->
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
+    // Конфигурация вашего Firebase проекта
+    const firebaseConfig = {
+      apiKey: "AIzaSyDqzTJfdh1nCm1kLqK9z3HUNPsbkbA5D2w",
+      authDomain: "nvgd-ab36c.firebaseapp.com",
+      projectId: "nvgd-ab36c",
+      storageBucket: "nvgd-ab36c.appspot.com",
+      messagingSenderId: "316452132785",
+      appId: "1:316452132785:web:581a56f323714f5de90f90",
+      measurementId: "G-PTY3TQP2QC"
+    };
 
-  <!-- Мягкое свечение -->
-  <div class="glow"></div>
+    // Инициализация Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
 
-  <!-- Снег -->
-  <canvas id="snowCanvas"></canvas>
-
-  <!-- Фейерверки -->
-  <canvas id="fireworksCanvas"></canvas>
-
-  <!-- Основное поздравление -->
-  <div class="greeting-container">
-    <h1>С Новым Годом!</h1>
-    <p>Пусть в наступающем году вас ждут волшебные события и радостные встречи!</p>
-
-    <!-- Обратный отсчёт -->
-    <div class="countdown" id="countdown"></div>
-
-    <!-- Поля ввода и кнопка «добавить» -->
-    <div class="wish-form">
-      <input type="text" id="fromInput" placeholder="Ваше имя или ник..." />
-      <input type="text" id="wishInput" placeholder="Введите ваше желание..." />
-      <button id="addWishBtn">Добавить игрушку</button>
-      <!-- Новая кнопка «Случайное желание» -->
-      <button id="randomBtn" class="randomBtn">Случайное желание</button>
-    </div>
-
-    <!-- «Коробка» для игрушек -->
-    <div class="box-container" id="boxContainer"></div>
-  </div>
-
-  <!-- Модальное окно для просмотра желания -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <span id="closeModal" class="close">&times;</span>
-      <p id="modalText"></p>
-      <!-- Кнопка «Удалить» будет добавляться динамически, если это желание текущего пользователя -->
-      <div id="deleteContainer"></div>
-    </div>
-  </div>
-
-  <script>
     /***********************************************************
      * ГЕНЕРАЦИЯ / ЗАПОМНАНИЕ userId (чтобы отличать свои желания)
      ***********************************************************/
@@ -355,30 +324,24 @@
     }
 
     /***********************************************************
-     * ХРАНИМ ВСЕ ЖЕЛАНИЯ В localStorage
-     * Массив «allWishes» с элементами { id, userId, from, wish, color, x, y }
+     * ХРАНИМ ВСЕ ЖЕЛАНИЯ В Firestore
      ***********************************************************/
-    let allWishes = JSON.parse(localStorage.getItem('allWishes') || '[]');
-
-    // Обновляет localStorage
-    function saveAllWishes() {
-      localStorage.setItem('allWishes', JSON.stringify(allWishes));
-    }
+    const wishesCollection = collection(db, 'wishes');
 
     /***********************************************************
      * ВОССТАНОВИТЬ существующие игрушки при загрузке
      ***********************************************************/
     const boxContainer = document.getElementById('boxContainer');
 
-    function renderAllWishes() {
-      // Очищаем контейнер
-      boxContainer.innerHTML = '';
-
-      // Для каждого желания создаём .ornament
-      allWishes.forEach((item) => {
+    // Прослушиваем изменения в коллекции wishes
+    onSnapshot(wishesCollection, (snapshot) => {
+      boxContainer.innerHTML = ''; // Очищаем контейнер
+      snapshot.forEach((doc) => {
+        const item = doc.data();
+        item.id = doc.id; // Добавляем ID документа
         createOrnamentDOM(item);
       });
-    }
+    });
 
     // Функция: создать элемент .ornament в DOM из объекта item
     function createOrnamentDOM(item) {
@@ -388,10 +351,7 @@
       ornament.style.left = item.x + 'px';
       ornament.style.top  = item.y + 'px';
 
-      // Порядковый номер (но т.к. ID не обязательно числовой, 
-      // используем "орнамент" массив, можно показывать что угодно)
-      // Тут же можно показывать индекс или просто #, 
-      // но оставим как короткий ID, если нужно. Мы покажем 3 последних символа:
+      // Порядковый номер (последние 3 символа ID)
       const shortId = item.id.slice(-3).toUpperCase();
       const ornamentText = document.createElement('span');
       ornamentText.classList.add('ornament-text');
@@ -409,24 +369,18 @@
     }
 
     /***********************************************************
-     * При загрузке страницы — отрендерить все сохранённые
-     ***********************************************************/
-    renderAllWishes();
-
-    /***********************************************************
      * ДОБАВЛЕНИЕ новой игрушки
      ***********************************************************/
     const fromInput = document.getElementById('fromInput');
     const wishInput = document.getElementById('wishInput');
     const addWishBtn = document.getElementById('addWishBtn');
 
-    addWishBtn.addEventListener('click', () => {
+    addWishBtn.addEventListener('click', async () => {
       const fromValue = fromInput.value.trim() || '(аноним)';
       const wishValue = wishInput.value.trim();
       if (!wishValue) return;
 
       // Создаём новый объект желания
-      const newId = 'wish_' + Math.random().toString(36).substr(2, 9);
       const colorIndex = Math.floor(Math.random() * 6) + 1;
 
       // Координаты
@@ -435,25 +389,23 @@
       const y = Math.random() * (boxRect.height - 40);
 
       const newWish = {
-        id: newId,
         userId: userId,    // текущий пользователь
         from: fromValue,
         wish: wishValue,
         color: colorIndex,
         x,
-        y
+        y,
+        createdAt: serverTimestamp()
       };
 
-      // Добавляем в массив и сохраняем
-      allWishes.push(newWish);
-      saveAllWishes();
-
-      // Рендерим новую игрушку
-      createOrnamentDOM(newWish);
-
-      // Очищаем поля
-      fromInput.value = '';
-      wishInput.value = '';
+      try {
+        await addDoc(wishesCollection, newWish);
+        // Очищаем поля
+        fromInput.value = '';
+        wishInput.value = '';
+      } catch (error) {
+        console.error("Ошибка добавления желания: ", error);
+      }
     });
 
     /***********************************************************
@@ -465,12 +417,17 @@
     const closeModal = document.getElementById('closeModal');
     const deleteContainer = document.getElementById('deleteContainer');
 
-    boxContainer.addEventListener('click', (e) => {
-      if (e.target.classList.contains('ornament')) {
-        const id    = e.target.getAttribute('data-id');
-        const oUser = e.target.getAttribute('data-userid');
-        const oFrom = e.target.getAttribute('data-from');
-        const oWish = e.target.getAttribute('data-wish');
+    boxContainer.addEventListener('click', async (e) => {
+      let target = e.target;
+      // Проверяем, что клик был по .ornament или его дочернему элементу
+      if (target.classList.contains('ornament-text')) {
+        target = target.parentElement;
+      }
+      if (target.classList.contains('ornament')) {
+        const id    = target.getAttribute('data-id');
+        const oUser = target.getAttribute('data-userid');
+        const oFrom = target.getAttribute('data-from');
+        const oWish = target.getAttribute('data-wish');
 
         // Показываем в модалке
         modalText.innerHTML = "<strong>От кого:</strong> " + oFrom
@@ -483,14 +440,14 @@
           delBtn.textContent = 'Удалить';
           delBtn.classList.add('deleteBtn');
 
-          delBtn.addEventListener('click', () => {
-            // Удаляем из allWishes
-            allWishes = allWishes.filter(item => item.id !== id);
-            saveAllWishes();
-            // Перерисовать
-            renderAllWishes();
-            // Закрыть модалку
-            modal.style.display = 'none';
+          delBtn.addEventListener('click', async () => {
+            try {
+              await deleteDoc(doc(db, 'wishes', id));
+              // Закрыть модалку
+              modal.style.display = 'none';
+            } catch (error) {
+              console.error("Ошибка удаления желания: ", error);
+            }
           });
 
           deleteContainer.appendChild(delBtn);
@@ -513,39 +470,51 @@
      * Кнопка «Случайное желание»
      ***********************************************************/
     const randomBtn = document.getElementById('randomBtn');
-    randomBtn.addEventListener('click', () => {
-      if (allWishes.length === 0) {
-        alert('Пока нет ни одного желания!');
-        return;
-      }
-      // Берём случайный элемент
-      const randomIndex = Math.floor(Math.random() * allWishes.length);
-      const randWish = allWishes[randomIndex];
-
-      // Показываем в модалке
-      modalText.innerHTML = "<strong>От кого:</strong> " + randWish.from
-                          + "<br /><strong>Желание:</strong> " + randWish.wish;
-      deleteContainer.innerHTML = '';
-      // Если это желание текущего юзера, добавим кнопку «Удалить»
-      if (randWish.userId === userId) {
-        const delBtn = document.createElement('button');
-        delBtn.textContent = 'Удалить';
-        delBtn.classList.add('deleteBtn');
-        delBtn.addEventListener('click', () => {
-          allWishes = allWishes.filter(item => item.id !== randWish.id);
-          saveAllWishes();
-          renderAllWishes();
-          modal.style.display = 'none';
+    randomBtn.addEventListener('click', async () => {
+      try {
+        const q = query(wishesCollection, orderBy('createdAt'));
+        const snapshot = await getDocs(q);
+        const wishes = [];
+        snapshot.forEach(doc => {
+          wishes.push({ id: doc.id, ...doc.data() });
         });
-        deleteContainer.appendChild(delBtn);
-      }
+        if (wishes.length === 0) {
+          alert('Пока нет ни одного желания!');
+          return;
+        }
+        // Берём случайный элемент
+        const randomIndex = Math.floor(Math.random() * wishes.length);
+        const randWish = wishes[randomIndex];
 
-      modal.style.display = 'block';
+        // Показываем в модалке
+        modalText.innerHTML = "<strong>От кого:</strong> " + randWish.from
+                            + "<br /><strong>Желание:</strong> " + randWish.wish;
+        deleteContainer.innerHTML = '';
+        // Если это желание текущего юзера, добавим кнопку «Удалить»
+        if (randWish.userId === userId) {
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'Удалить';
+          delBtn.classList.add('deleteBtn');
+          delBtn.addEventListener('click', async () => {
+            try {
+              await deleteDoc(doc(db, 'wishes', randWish.id));
+              modal.style.display = 'none';
+            } catch (error) {
+              console.error("Ошибка удаления желания: ", error);
+            }
+          });
+          deleteContainer.appendChild(delBtn);
+        }
+
+        modal.style.display = 'block';
+      } catch (error) {
+        console.error("Ошибка получения желаний: ", error);
+      }
     });
 
     /***********************************************************
      * DRAG-N-DROP для .ornament
-     * При перемещении нужно обновлять x,y в allWishes → localStorage
+     * При перемещении нужно обновлять x,y в Firestore
      ***********************************************************/
     function makeDraggable(el) {
       let isDragging = false;
@@ -580,20 +549,26 @@
         el.style.top  = newTop  + 'px';
       }
 
-      function endDrag() {
+      async function endDrag() {
+        if (!isDragging) return;
         isDragging = false;
         document.removeEventListener('mousemove', onDrag);
         document.removeEventListener('touchmove', onDrag);
         document.removeEventListener('mouseup', endDrag);
         document.removeEventListener('touchend', endDrag);
 
-        // Запомним новые координаты в allWishes
+        // Запомним новые координаты в Firestore
         const ornamentId = el.getAttribute('data-id');
-        const index = allWishes.findIndex(item => item.id === ornamentId);
-        if (index !== -1) {
-          allWishes[index].x = parseFloat(el.style.left);
-          allWishes[index].y = parseFloat(el.style.top);
-          saveAllWishes();
+        const newX = parseFloat(el.style.left);
+        const newY = parseFloat(el.style.top);
+
+        try {
+          await updateDoc(doc(db, 'wishes', ornamentId), {
+            x: newX,
+            y: newY
+          });
+        } catch (error) {
+          console.error("Ошибка обновления координат: ", error);
         }
       }
 
@@ -752,5 +727,60 @@
     }
     animateFireworks();
   </script>
+</head>
+<body>
+
+  <!-- ЗВЁЗДЫ -->
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+
+  <!-- Мягкое свечение -->
+  <div class="glow"></div>
+
+  <!-- Снег -->
+  <canvas id="snowCanvas"></canvas>
+
+  <!-- Фейерверки -->
+  <canvas id="fireworksCanvas"></canvas>
+
+  <!-- Основное поздравление -->
+  <div class="greeting-container">
+    <h1>С Новым Годом!</h1>
+    <p>Пусть в наступающем году вас ждут волшебные события и радостные встречи!</p>
+
+    <!-- Обратный отсчёт -->
+    <div class="countdown" id="countdown"></div>
+
+    <!-- Поля ввода и кнопка «добавить» -->
+    <div class="wish-form">
+      <input type="text" id="fromInput" placeholder="Ваше имя или ник..." />
+      <input type="text" id="wishInput" placeholder="Введите ваше желание..." />
+      <button id="addWishBtn">Добавить игрушку</button>
+      <!-- Новая кнопка «Случайное желание» -->
+      <button id="randomBtn" class="randomBtn">Случайное желание</button>
+    </div>
+
+    <!-- «Коробка» для игрушек -->
+    <div class="box-container" id="boxContainer"></div>
+  </div>
+
+  <!-- Модальное окно для просмотра желания -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span id="closeModal" class="close">&times;</span>
+      <p id="modalText"></p>
+      <!-- Кнопка «Удалить» будет добавляться динамически, если это желание текущего пользователя -->
+      <div id="deleteContainer"></div>
+    </div>
+  </div>
+
 </body>
 </html>
